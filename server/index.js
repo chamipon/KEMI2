@@ -1,12 +1,13 @@
 require("dotenv").config();
 const express = require("express");
-const { MongoClient } = require("mongodb");
+const bodyParser = require("body-parser");
+const TaskRouter = require("./routes/task.router")
 
 const app = express();
 const API_PORT = process.env.API_PORT || 8888;
 
-var MONGODB_URI="mongodb://root:example@mongo:27017"
-const client = new MongoClient(MONGODB_URI);
+app.use(bodyParser.json());
+app.use("/tasks",TaskRouter)
 
 app.listen(API_PORT, () => {
     console.log(`Now listening on port ${API_PORT}`)

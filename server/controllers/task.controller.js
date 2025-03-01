@@ -1,32 +1,25 @@
-const { MongoClient } = require("mongodb");
-const ObjectId = require("mongodb").ObjectId;
+import { MongoClient } from "mongodb";
+import { ObjectId } from "mongodb";
+
 var MONGODB_URI = "mongodb://root:example@mongo:27017";
-const client = new MongoClient(MONGODB_URI);
+const client = await MongoClient.connect(MONGODB_URI);
+const db = client.db("kemi");
+const collection = db.collection("tasks");
 
 class TaskController {
 	static async getAllTasks(req, res) {
 		try {
-			await client.connect();
-			const db = client.db("kemi");
-			const collection = db.collection("tasks");
-
-			const cursor = collection.find();
+            const cursor = collection.find();
 			const allTasks = await cursor.toArray();
 			res.status(200).send(allTasks);
 		} catch (err) {
 			console.error("Error executing query", err);
 			res.status(500).send(err);
-		} finally {
-			await client.close();
 		}
 	}
 	static async getTask(req, res) {
 		var id = req.params.id;
 		try {
-			await client.connect();
-			const db = client.db("kemi");
-			const collection = db.collection("tasks");
-
 			const cursor = collection.find({ _id: ObjectId.createFromHexString(id) });
 			const tasks = await cursor.toArray();
 
@@ -41,16 +34,12 @@ class TaskController {
 			console.error("Error executing query", err);
 			res.status(500).send(err);
 		}			
-        finally {
-            await client.close();
-        }
+
 	}
 	static async addTask(req, res) {
 		var task = req.body;
-
 		if (task) {
 			try {
-				await client.connect();
 				const db = client.db("kemi");
 				const collection = db.collection("tasks");
 
@@ -60,8 +49,6 @@ class TaskController {
 			} catch {
 				console.error("Error executing query", err);
 				res.status(500).send(err);
-			} finally {
-				await client.close();
 			}
 		} else {
 			res.status(400).send("Invalid request body");
@@ -71,9 +58,6 @@ class TaskController {
     static async deleteTask(req, res){
         var id = req.params.id;
 		try {
-			await client.connect();
-			const db = client.db("kemi");
-			const collection = db.collection("tasks");
 			const result = await collection.deleteOne({ _id: ObjectId.createFromHexString(id) });
             if(result.deletedCount == 1){
                 console.log("Task with id " + id + " deleted.");
@@ -86,16 +70,12 @@ class TaskController {
 			console.error("Error executing query", err);
 			res.status(500).send(err);
 		}			
-        finally {
-            await client.close();
-        }
-        
     }
 	static async UpdateTask(req, res) {
         var id = req.params.id;
         var updates = req.body;
         try{
-            await client.connect();
+            
             const db = client.db("kemi");
             const collection = db.collection("tasks");
 
@@ -115,10 +95,7 @@ class TaskController {
             console.error("Error executing query", err);
 			res.status(500).send(err);
         }
-        finally{
-            client.close();
-        }
     }
 }
 
-module.exports = TaskController;
+export default TaskController;

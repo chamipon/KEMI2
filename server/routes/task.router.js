@@ -1,12 +1,12 @@
-const express = require("express");
-const router = express.Router();
+import express from "express";
+const TaskRouter = express.Router();
+import TaskController from "../controllers/task.controller.js";
 
-const TaskController = require("../controllers/task.controller");
 
-router.get("/", TaskController.getAllTasks);
-router.get("/:id", TaskController.getTask);
-router.post("/", TaskController.addTask);
-router.delete("/:id",TaskController.deleteTask);
-router.patch("/:id",TaskController.UpdateTask);
+TaskRouter.get("/", TaskController.getAllTasks);
+TaskRouter.get("/:id", TaskController.getTask);
+TaskRouter.post("/", TaskController.addTask);
+TaskRouter.delete("/:id",TaskController.deleteTask);
+TaskRouter.patch("/:id",TaskController.UpdateTask);
 
-module.exports = router;
+export default TaskRouter;

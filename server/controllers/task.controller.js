@@ -91,7 +91,34 @@ class TaskController {
         }
         
     }
-	static async UpdateTask() {}
+	static async UpdateTask(req, res) {
+        var id = req.params.id;
+        var updates = req.body;
+        try{
+            await client.connect();
+            const db = client.db("kemi");
+            const collection = db.collection("tasks");
+
+            const result = await collection.updateOne(
+                { _id: ObjectId.createFromHexString(id) },
+                {
+                     $set: updates 
+                }
+            )
+            if (result.matchedCount === 1) {
+                res.status(200).send('Task updated');
+              } else {
+                res.status(404).send("Task not found with id " + id)
+              }
+        }
+        catch(err){
+            console.error("Error executing query", err);
+			res.status(500).send(err);
+        }
+        finally{
+            client.close();
+        }
+    }
 }
 
 module.exports = TaskController;

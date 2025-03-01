@@ -27,12 +27,12 @@ class TaskController {
 			const db = client.db("kemi");
 			const collection = db.collection("tasks");
 
-			const cursor = collection.find({ _id: new ObjectId(id) });
+			const cursor = collection.find({ _id: ObjectId.createFromHexString(id) });
 			const tasks = await cursor.toArray();
 
 			if (tasks.length == 0) {
-				res.status(404).send("No ingredient found with id " + id);
-				console.log("No ingredient found with id " + id);
+				res.status(404).send("No task found with id " + id);
+				console.log("No task found with id " + id);
 			} else {
 				console.log(tasks[0]);
 				res.status(200).send(tasks[0]);
@@ -40,7 +40,10 @@ class TaskController {
 		} catch (err) {
 			console.error("Error executing query", err);
 			res.status(500).send(err);
-		}
+		}			
+        finally {
+            await client.close();
+        }
 	}
 	static async addTask(req, res) {
 		var task = req.body;
@@ -65,6 +68,29 @@ class TaskController {
 			console.error("Invalid request");
 		}
 	}
+    static async deleteTask(req, res){
+        var id = req.params.id;
+		try {
+			await client.connect();
+			const db = client.db("kemi");
+			const collection = db.collection("tasks");
+			const result = await collection.deleteOne({ _id: ObjectId.createFromHexString(id) });
+            if(result.deletedCount == 1){
+                console.log("Task with id " + id + " deleted.");
+                res.status(204).send();
+            }
+			else{
+                res.status(404).send("Task not found with id " + id)
+            }
+		} catch (err) {
+			console.error("Error executing query", err);
+			res.status(500).send(err);
+		}			
+        finally {
+            await client.close();
+        }
+        
+    }
 	static async UpdateTask() {}
 }
 

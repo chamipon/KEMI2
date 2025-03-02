@@ -18,9 +18,14 @@ const TaskWorker = new Worker(
                 return await TaskService.addTask(job.data.task);
             else if (job.name == "deleteTask")
                 return await TaskService.deleteTask(job.data.id);
+            else if (job.name == "updateTask")
+                return await TaskService.updateTask(job.data.id, job.data.updates);
         }
         catch (err){
-            return err;
+            return {
+                error:true,
+                message: err
+            };
         }
     },
     { connection: redisConnection},

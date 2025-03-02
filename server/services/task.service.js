@@ -13,8 +13,7 @@ class TaskService {
 			const allTasks = await cursor.toArray();
             return allTasks;
 		} catch (err) {
-			console.error("Error executing query", err);
-            return err;
+            throw new Error(err);
 		}
 	}
 	static async getTask(id) {
@@ -28,8 +27,7 @@ class TaskService {
 				return tasks[0];
 			}
 		} catch (err) {
-			console.error("Error executing query", err);
-            
+            throw new Error(err);
 		}			
 
 	}
@@ -41,12 +39,10 @@ class TaskService {
                 return result.insertedId;
 
 			} catch(err) {
-				console.error("Error executing query", err);
-                return err
+				throw new Error(err);
 			}
 		} else {
-            console.error("Invalid request body");
-            throw new Error("Invalid request body");
+            throw new Error(err);
 			
 		}
     }
@@ -63,10 +59,27 @@ class TaskService {
                 
             }
         } catch (err) {
-            console.error("Error executing query", err);
-            return err;
+            throw new Error(err);
         }			
     }
+    static async updateTask(id, updates) {
+            try{
+                const result = await collection.updateOne(
+                    { _id: ObjectId.createFromHexString(id) },
+                    {
+                         $set: updates 
+                    }
+                )
+                if (result.matchedCount === 1) {
+                    return result.matchedCount;
+                  } else {
+                    throw new Error("Task not found with id: " + id);
+                  }
+            }
+            catch(err){
+                throw new Error("Task not found with id: " + id);
+            }
+        }
 }
 
 export default TaskService;

@@ -55,26 +55,10 @@ class TaskController {
 	static async UpdateTask(req, res) {
         var id = req.params.id;
         var updates = req.body;
-        try{
-            
-            const db = client.db("kemi");
-            const collection = db.collection("tasks");
-
-            const result = await collection.updateOne(
-                { _id: ObjectId.createFromHexString(id) },
-                {
-                     $set: updates 
-                }
-            )
-            if (result.matchedCount === 1) {
-                res.status(200).send('Task updated');
-              } else {
-                res.status(404).send("Task not found with id " + id)
-              }
-        }
-        catch(err){
-            console.error("Error executing query", err);
-			res.status(500).send(err);
+		var job = await myQueue.add('updateTask', {id, updates})
+        activeJobs[job.id] = {
+            job,
+            res
         }
     }
 }
@@ -82,18 +66,20 @@ TaskWorker.on('completed', (job, returnvalue) => {
     console.log("job completed:" + job.id)
     var res = activeJobs[job.id].res;
     try{
-        if(returnvalue){
+        if(!returnvalue.error){
             if (job.name == "getAllTasks")
                 res.status(200).send(returnvalue);
             else if(job.name == "getTask")
                 res.status(200).send(returnvalue);
             else if (job.name == "addTask")
-                res.status(201).send(returnvalue);
+                res.status(201).send(returnvalue.toString());
             else if (job.name == "deleteTask")
-                res.status(204).send(returnvalue);
+                res.status(204).send(returnvalue.toString());
+            else if (job.name == "updateTask")
+                res.status(200).send(returnvalue.toString());
         }
         else{
-            res.status(500).send();
+            res.status(500).send(returnvalue.message);
         }
     } 
     catch(err){

@@ -14,7 +14,8 @@ const TaskWorker = new Worker(
             if (job.name == "getAllTasks"){
                 return await TaskService.getAllTasks();
             }
-            
+            if(job.name == "getTask")
+                return await TaskService.getTask(job.data.id);
         }
         catch (err){
             return err;

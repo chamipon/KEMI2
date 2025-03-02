@@ -30,22 +30,11 @@ class TaskController {
 	}
 	static async getTask(req, res) {
 		var id = req.params.id;
-		try {
-			const cursor = collection.find({ _id: ObjectId.createFromHexString(id) });
-			const tasks = await cursor.toArray();
-
-			if (tasks.length == 0) {
-				res.status(404).send("No task found with id " + id);
-				console.log("No task found with id " + id);
-			} else {
-				console.log(tasks[0]);
-				res.status(200).send(tasks[0]);
-			}
-		} catch (err) {
-			console.error("Error executing query", err);
-			res.status(500).send(err);
-		}			
-
+		var job = await myQueue.add('getAllTasks', {id})
+        activeJobs[job.id] = {
+            job,
+            res
+        }		
 	}
 	static async addTask(req, res) {
 		var task = req.body;

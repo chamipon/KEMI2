@@ -1,21 +1,32 @@
 import { MongoClient } from "mongodb";
 import { ObjectId } from "mongodb";
+import  TaskService  from "../services/task.service.js";
+import  TaskWorker  from "../workers/task.worker.js";
 
 var MONGODB_URI = "mongodb://root:example@mongo:27017";
 const client = await MongoClient.connect(MONGODB_URI);
 const db = client.db("kemi");
 const collection = db.collection("tasks");
 
+import { Queue } from 'bullmq';
+import IORedis from 'ioredis';
+
+const redisConnection = new IORedis("6379","cache://cache", 
+    {maxRetriesPerRequest: null}
+);
+const myQueue = new Queue('taskQueue', {
+    connection: redisConnection,
+});
+
+var activeJobs = {};
+
 class TaskController {
 	static async getAllTasks(req, res) {
-		try {
-            const cursor = collection.find();
-			const allTasks = await cursor.toArray();
-			res.status(200).send(allTasks);
-		} catch (err) {
-			console.error("Error executing query", err);
-			res.status(500).send(err);
-		}
+        var job = await myQueue.add('getAllTasks')
+        activeJobs[job.id] = {
+            job,
+            res
+        }
 	}
 	static async getTask(req, res) {
 		var id = req.params.id;
@@ -97,5 +108,16 @@ class TaskController {
         }
     }
 }
+TaskWorker.on('completed', (job, returnvalue) => {
+    console.log("job completed:" + job.id)
 
+    var res = activeJobs[job.id].res;    
+
+    if(returnvalue){
+        res.status(200).send(returnvalue)
+    }
+    else{
+        res.status(500)
+    }
+});
 export default TaskController;

@@ -46,19 +46,11 @@ class TaskController {
 	}
     static async deleteTask(req, res){
         var id = req.params.id;
-		try {
-			const result = await collection.deleteOne({ _id: ObjectId.createFromHexString(id) });
-            if(result.deletedCount == 1){
-                console.log("Task with id " + id + " deleted.");
-                res.status(204).send();
-            }
-			else{
-                res.status(404).send("Task not found with id " + id)
-            }
-		} catch (err) {
-			console.error("Error executing query", err);
-			res.status(500).send(err);
-		}			
+		var job = await myQueue.add('deleteTask', {id})
+        activeJobs[job.id] = {
+            job,
+            res
+        }			
     }
 	static async UpdateTask(req, res) {
         var id = req.params.id;
@@ -88,17 +80,25 @@ class TaskController {
 }
 TaskWorker.on('completed', (job, returnvalue) => {
     console.log("job completed:" + job.id)
-    var res = activeJobs[job.id].res;    
-    if(returnvalue){
-        if (job.name == "getAllTasks")
-            res.status(200).send(returnvalue);
-        else if(job.name == "getTask")
-            res.status(200).send(returnvalue);
-        else if (job.name == "addTask")
-            res.status(201).send(returnvalue)
-    }
-    else{
-        res.status(500)
-    }
+    var res = activeJobs[job.id].res;
+    try{
+        if(returnvalue){
+            if (job.name == "getAllTasks")
+                res.status(200).send(returnvalue);
+            else if(job.name == "getTask")
+                res.status(200).send(returnvalue);
+            else if (job.name == "addTask")
+                res.status(201).send(returnvalue);
+            else if (job.name == "deleteTask")
+                res.status(204).send(returnvalue);
+        }
+        else{
+            res.status(500).send();
+        }
+    } 
+    catch(err){
+        res.status(500).send(err)
+    }   
+
 });
 export default TaskController;

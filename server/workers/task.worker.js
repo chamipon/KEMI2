@@ -6,7 +6,6 @@ const redisConnection = new IORedis("6379","cache://cache",
     {maxRetriesPerRequest: null}
 );
 
-
 const TaskWorker = new Worker(
     'taskQueue',
     async job => {
@@ -16,8 +15,9 @@ const TaskWorker = new Worker(
             else if(job.name == "getTask")
                 return await TaskService.getTask(job.data.id);
             else if (job.name == "addTask")
-                return await TaskService.addTask(job.data.task)
-
+                return await TaskService.addTask(job.data.task);
+            else if (job.name == "deleteTask")
+                return await TaskService.deleteTask(job.data.id);
         }
         catch (err){
             return err;

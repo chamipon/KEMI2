@@ -29,7 +29,7 @@ class TaskService {
 			}
 		} catch (err) {
 			console.error("Error executing query", err);
-
+            
 		}			
 
 	}
@@ -49,6 +49,23 @@ class TaskService {
             throw new Error("Invalid request body");
 			
 		}
+    }
+    static async deleteTask(id){
+        try {
+            const result = await collection.deleteOne({ _id: ObjectId.createFromHexString(id) });
+            if(result.deletedCount == 1){
+                console.log("Task with id " + id + " deleted.");
+                return result.deletedCount;
+            }
+            else{
+                let err = "Task not found with id " + id;
+                throw new Error(err);
+                
+            }
+        } catch (err) {
+            console.error("Error executing query", err);
+            return err;
+        }			
     }
 }
 

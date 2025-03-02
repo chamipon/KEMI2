@@ -23,18 +23,33 @@ class TaskService {
 			const tasks = await cursor.toArray();
 
 			if (tasks.length == 0) {
-				res.status(404).send("No task found with id " + id);
-				console.log("No task found with id " + id);
+                throw new Error("No task found with id: " + id)
 			} else {
-				console.log(tasks[0]);
-				res.status(200).send(tasks[0]);
+				return tasks[0];
 			}
 		} catch (err) {
 			console.error("Error executing query", err);
-			res.status(500).send(err);
+
 		}			
 
 	}
+    static async addTask(task){
+        if (task) {
+			try {
+				const result = await collection.insertOne(task);
+				console.log("Task created: " + result.insertedId);
+                return result.insertedId;
+
+			} catch(err) {
+				console.error("Error executing query", err);
+                return err
+			}
+		} else {
+            console.error("Invalid request body");
+            throw new Error("Invalid request body");
+			
+		}
+    }
 }
 
 export default TaskService;

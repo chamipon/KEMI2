@@ -30,7 +30,7 @@ class TaskController {
 	}
 	static async getTask(req, res) {
 		var id = req.params.id;
-		var job = await myQueue.add('getAllTasks', {id})
+		var job = await myQueue.add('getTask', {id})
         activeJobs[job.id] = {
             job,
             res
@@ -38,22 +38,11 @@ class TaskController {
 	}
 	static async addTask(req, res) {
 		var task = req.body;
-		if (task) {
-			try {
-				const db = client.db("kemi");
-				const collection = db.collection("tasks");
-
-				const result = await collection.insertOne(task);
-				console.log("Task created: " + result.insertedId);
-				res.status(201).send(result.insertedId);
-			} catch {
-				console.error("Error executing query", err);
-				res.status(500).send(err);
-			}
-		} else {
-			res.status(400).send("Invalid request body");
-			console.error("Invalid request");
-		}
+		var job = await myQueue.add('addTask', {task})
+        activeJobs[job.id] = {
+            job,
+            res
+        }
 	}
     static async deleteTask(req, res){
         var id = req.params.id;
@@ -99,11 +88,14 @@ class TaskController {
 }
 TaskWorker.on('completed', (job, returnvalue) => {
     console.log("job completed:" + job.id)
-
     var res = activeJobs[job.id].res;    
-
     if(returnvalue){
-        res.status(200).send(returnvalue)
+        if (job.name == "getAllTasks")
+            res.status(200).send(returnvalue);
+        else if(job.name == "getTask")
+            res.status(200).send(returnvalue);
+        else if (job.name == "addTask")
+            res.status(201).send(returnvalue)
     }
     else{
         res.status(500)

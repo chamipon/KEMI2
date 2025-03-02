@@ -11,11 +11,13 @@ const TaskWorker = new Worker(
     'taskQueue',
     async job => {
         try{
-            if (job.name == "getAllTasks"){
+            if (job.name == "getAllTasks")
                 return await TaskService.getAllTasks();
-            }
-            if(job.name == "getTask")
+            else if(job.name == "getTask")
                 return await TaskService.getTask(job.data.id);
+            else if (job.name == "addTask")
+                return await TaskService.addTask(job.data.task)
+
         }
         catch (err){
             return err;

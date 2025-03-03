@@ -26,6 +26,8 @@ const TaskWorker = new Worker(
         catch (err){
             console.error(err)
             //Return the error and proper status code so we can properly report the error.
+            if(!err.code)
+                err.code=500;
             return {
                 error:true,
                 error_message: err,

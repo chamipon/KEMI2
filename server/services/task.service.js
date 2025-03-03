@@ -34,7 +34,7 @@ class TaskService {
             console.log("Task created: " + result.insertedId);
             return result.insertedId;
 		} else {
-            let err = new Error("Empty body: " + id);
+            let err = new Error("Empty body");
             err.code = 400;
             throw err;
 		}

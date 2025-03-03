@@ -9,6 +9,7 @@ const chai = use(chaiHttp);
 let server = "localhost:" + 2222;
 let should = chai.should();
 
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRlc3QiLCJpYXQiOjE3NDA5NjgxMTIsImV4cCI6MTc0MDk2OTkxMn0.8Flrdx0pleMd7FIxaxssu43jQ8md_ekrK9TUsF_X4OA";
 
 chai.use(chaiHttp);
 //Our parent block
@@ -16,10 +17,24 @@ describe("Tasks", () => {
 	/*
 	 * Test the /GET route
 	 */
+    
+
+    describe("/GET auth", () => {
+		it("it should GET an auth token", (done) => {
+			chai.request.execute(server)
+                .get("/auth")
+                .send({username:"username"})
+                .end((err,res) =>{
+                    res.should.have.status(200);
+                    done();
+            })
+		});
+	});
 	describe("/GET task", () => {
 		it("it should GET all the tasks", (done) => {
 			chai.request.execute(server)
 				.get("/tasks")
+                .set({ "Authorization": `Bearer ${token}` })
 				.end((err, res) => {
 					res.should.have.status(200);
 					res.body.should.be.a("array");
@@ -37,6 +52,7 @@ describe("Tasks", () => {
 			};
 			chai.request.execute(server)
 				.post("/tasks")
+                .set({ "Authorization": `Bearer ${token}` })
 				.send(task)
 				.end((err, res) => {
 					res.should.have.status(201);
@@ -55,11 +71,13 @@ describe("Tasks", () => {
 
 			chai.request.execute(server)
 				.post("/tasks")
+                .set({ "Authorization": `Bearer ${token}` })
 				.send(task)
 				.end((err, res) => {
 					task.id = res.text;
 					chai.request.execute(server)
 						.get("/tasks/" + task.id)
+                        .set({ "Authorization": `Bearer ${token}` })
 						.end((err, res) => {
 							res.should.have.status(200);
 							res.body.should.be.a("object");
@@ -71,6 +89,7 @@ describe("Tasks", () => {
 		it("it should not GET a task with an invalid ID", (done) => {
 			chai.request.execute(server)
 				.get("/tasks/0")
+                .set({ "Authorization": `Bearer ${token}` })
 				.end((err, res) => {
 					res.should.have.status(500);
 					res.text.should.eq("BSONError: hex string must be 24 characters");
@@ -80,6 +99,7 @@ describe("Tasks", () => {
         it("it should not GET a task with unused ID", (done) => {
 			chai.request.execute(server)
 				.get("/tasks/67c4f1e8feb24b1141ac3ae9")
+                .set({ "Authorization": `Bearer ${token}` })
 				.end((err, res) => {
 					res.should.have.status(404);
 					done();
@@ -96,11 +116,13 @@ describe("Tasks", () => {
 			let newtitle = "NEWTASKTITLE";
 			chai.request.execute(server)
 				.post("/tasks")
+                .set({ "Authorization": `Bearer ${token}` })
 				.send(task)
 				.end((err, res) => {
 					task.id = res.text;
 					chai.request.execute(server)
 						.patch("/tasks/" + task.id)
+                        .set({ "Authorization": `Bearer ${token}` })
 						.send({
 							title: newtitle,
 						})
@@ -114,6 +136,7 @@ describe("Tasks", () => {
 		it("it should not PUT a task with unused ID", (done) => {
 			chai.request.execute(server)
 				.put("/tasks/67c4f1e8feb24b1141ac3ae9")
+                .set({ "Authorization": `Bearer ${token}` })
 				.end((err, res) => {
 					res.should.have.status(404);
 					done();
@@ -130,11 +153,13 @@ describe("Tasks", () => {
 
 			chai.request.execute(server)
 				.post("/tasks")
+                .set({ "Authorization": `Bearer ${token}` })
 				.send(task)
 				.end((err, res) => {
 					task.id = res.text;
 					chai.request.execute(server)
 						.delete("/tasks/" + task.id)
+                        .set({ "Authorization": `Bearer ${token}` })
 						.end((err, res) => {
 							res.should.have.status(204);
 							res.body.should.be.an("object").that.is.empty;
@@ -145,6 +170,7 @@ describe("Tasks", () => {
 		it("it should not DELETE a task with unused ID", (done) => {
 			chai.request.execute(server)
 				.delete("/tasks/67c4f1e8feb24b1141ac3ae9")
+                .set({ "Authorization": `Bearer ${token}` })
 				.end((err, res) => {
 					res.should.have.status(404);
 					res.text.should.contain("No task found with id");

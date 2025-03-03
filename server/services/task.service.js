@@ -8,78 +8,63 @@ const collection = db.collection("tasks");
 
 class TaskService {
 	static async getAllTasks() {
-		try {
-            const cursor = collection.find();
-			const allTasks = await cursor.toArray();
-            return allTasks;
-		} catch (err) {
-            throw new Error(err);
-		}
+        const cursor = collection.find();
+        const allTasks = await cursor.toArray();
+        return allTasks;
+
 	}
 	static async getTask(id) {
-		try {
-			const cursor = collection.find({ _id: ObjectId.createFromHexString(id) });
-			const tasks = await cursor.toArray();
+        const cursor = collection.find({ _id: ObjectId.createFromHexString(id) });
+        const tasks = await cursor.toArray();
 
-			if (tasks.length == 0) {
-                throw new Error("No task found with id: " + id)
-			} else {
-				return tasks[0];
-			}
-		} catch (err) {
-            throw new Error(err);
-		}			
+        if (tasks.length == 0) {
+            let err = new Error("No task found with id: " + id);
+            err.code = 404;
+            throw err;
 
+        } else {
+            return tasks[0];
+        }
 	}
     static async addTask(task){
-        if (task) {
-			try {
-				const result = await collection.insertOne(task);
-				console.log("Task created: " + result.insertedId);
-                return result.insertedId;
-
-			} catch(err) {
-				throw new Error(err);
-			}
+        if (Object.keys(task).length != 0) {
+            const result = await collection.insertOne(task);
+            console.log("Task created: " + result.insertedId);
+            return result.insertedId;
 		} else {
-            throw new Error(err);
-			
+            let err = new Error("Empty body: " + id);
+            err.code = 400;
+            throw err;
 		}
     }
     static async deleteTask(id){
-        try {
-            const result = await collection.deleteOne({ _id: ObjectId.createFromHexString(id) });
-            if(result.deletedCount == 1){
-                console.log("Task with id " + id + " deleted.");
-                return result.deletedCount;
-            }
-            else{
-                let err = "Task not found with id " + id;
-                throw new Error(err);
-                
-            }
-        } catch (err) {
-            throw new Error(err);
-        }			
+        const result = await collection.deleteOne({ _id: ObjectId.createFromHexString(id) });
+        if(result.deletedCount == 1){
+            console.log("Task with id " + id + " deleted.");
+            return result.deletedCount;
+        }
+        else{
+            let err = new Error("No task found with id: " + id);
+            err.code = 404;
+            throw err;
+        }
+		
     }
     static async updateTask(id, updates) {
-            try{
-                const result = await collection.updateOne(
-                    { _id: ObjectId.createFromHexString(id) },
-                    {
-                         $set: updates 
-                    }
-                )
-                if (result.matchedCount === 1) {
-                    return result.matchedCount;
-                  } else {
-                    throw new Error("Task not found with id: " + id);
-                  }
+        var result = await collection.updateOne(
+            { _id: ObjectId.createFromHexString(id) },
+            {
+                $set: updates 
             }
-            catch(err){
-                throw new Error("Task not found with id: " + id);
-            }
+        )
+        if (result.matchedCount === 1) {
+            return result.matchedCount;
+        } else {
+            let err = new Error("No task found with id: " + id);
+            err.code = 404;
+            throw err;
         }
+    }
 }
 
 export default TaskService;

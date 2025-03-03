@@ -1,13 +1,4 @@
-import { MongoClient } from "mongodb";
-import { ObjectId } from "mongodb";
-import  TaskService  from "../services/task.service.js";
 import  TaskWorker  from "../workers/task.worker.js";
-
-var MONGODB_URI = "mongodb://root:example@mongo:27017";
-const client = await MongoClient.connect(MONGODB_URI);
-const db = client.db("kemi");
-const collection = db.collection("tasks");
-
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 
@@ -79,7 +70,10 @@ TaskWorker.on('completed', (job, returnvalue) => {
                 res.status(200).send(returnvalue.toString());
         }
         else{
-            res.status(500).send(returnvalue.message);
+            let statuscode = 500;
+            if(returnvalue.error_code)
+                statuscode = returnvalue.error_code;
+            res.status(statuscode).send(returnvalue.error_message.toString());
         }
     } 
     catch(err){

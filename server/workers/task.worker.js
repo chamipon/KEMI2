@@ -22,9 +22,11 @@ const TaskWorker = new Worker(
                 return await TaskService.updateTask(job.data.id, job.data.updates);
         }
         catch (err){
+            console.error(err)
             return {
                 error:true,
-                message: err
+                error_message: err,
+                error_code: err.code
             };
         }
     },

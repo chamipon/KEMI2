@@ -6,6 +6,7 @@ services:
     environment:
       NODE_ENV: production
       API_PORT: 2222
+      REDIS_PORT: 6379
     ports: 
       - 2222:2222
     develop:
